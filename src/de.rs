@@ -93,8 +93,6 @@ pub trait Deserializer<'de> {
         fn erased_deserialize_i128(&mut self, v: &mut dyn Visitor<'de>) -> Result<Out, Error>;
         fn erased_deserialize_u128(&mut self, v: &mut dyn Visitor<'de>) -> Result<Out, Error>;
     }
-    fn erased_deserialize_f32(&mut self, v: &mut dyn Visitor<'de>) -> Result<Out, Error>;
-    fn erased_deserialize_f64(&mut self, v: &mut dyn Visitor<'de>) -> Result<Out, Error>;
     fn erased_deserialize_char(&mut self, v: &mut dyn Visitor<'de>) -> Result<Out, Error>;
     fn erased_deserialize_str(&mut self, v: &mut dyn Visitor<'de>) -> Result<Out, Error>;
     fn erased_deserialize_string(&mut self, v: &mut dyn Visitor<'de>) -> Result<Out, Error>;
@@ -157,8 +155,6 @@ pub trait Visitor<'de> {
         fn erased_visit_i128(&mut self, v: i128) -> Result<Out, Error>;
         fn erased_visit_u128(&mut self, v: u128) -> Result<Out, Error>;
     }
-    fn erased_visit_f32(&mut self, v: f32) -> Result<Out, Error>;
-    fn erased_visit_f64(&mut self, v: f64) -> Result<Out, Error>;
     fn erased_visit_char(&mut self, v: char) -> Result<Out, Error>;
     fn erased_visit_str(&mut self, v: &str) -> Result<Out, Error>;
     fn erased_visit_borrowed_str(&mut self, v: &'de str) -> Result<Out, Error>;
@@ -398,14 +394,6 @@ where
         }
     }
 
-    fn erased_deserialize_f32(&mut self, visitor: &mut dyn Visitor<'de>) -> Result<Out, Error> {
-        self.take().deserialize_f32(visitor).map_err(erase)
-    }
-
-    fn erased_deserialize_f64(&mut self, visitor: &mut dyn Visitor<'de>) -> Result<Out, Error> {
-        self.take().deserialize_f64(visitor).map_err(erase)
-    }
-
     fn erased_deserialize_char(&mut self, visitor: &mut dyn Visitor<'de>) -> Result<Out, Error> {
         self.take().deserialize_char(visitor).map_err(erase)
     }
@@ -577,14 +565,6 @@ where
         fn erased_visit_u128(&mut self, v: u128) -> Result<Out, Error> {
             unsafe { self.take().visit_u128(v).unsafe_map(Out::new) }
         }
-    }
-
-    fn erased_visit_f32(&mut self, v: f32) -> Result<Out, Error> {
-        unsafe { self.take().visit_f32(v).unsafe_map(Out::new) }
-    }
-
-    fn erased_visit_f64(&mut self, v: f64) -> Result<Out, Error> {
-        unsafe { self.take().visit_f64(v).unsafe_map(Out::new) }
     }
 
     fn erased_visit_char(&mut self, v: char) -> Result<Out, Error> {
@@ -862,14 +842,14 @@ macro_rules! impl_deserializer_for_trait_object {
                 }
             }
 
-            fn deserialize_f32<V>($($mut)* self, visitor: V) -> Result<V::Value, Error> where V: serde::de::Visitor<'de> {
-                let mut erased = erase::Visitor { state: Some(visitor) };
-                unsafe { self.erased_deserialize_f32(&mut erased).unsafe_map(Out::take) }
+            fn deserialize_f32<V>($($mut)* self, _visitor: V) -> Result<V::Value, Error> where V: serde::de::Visitor<'de> {
+                use serde::de::Error;
+                Err(Error::custom("deserializing f32 is not supported"))
             }
 
-            fn deserialize_f64<V>($($mut)* self, visitor: V) -> Result<V::Value, Error> where V: serde::de::Visitor<'de> {
-                let mut erased = erase::Visitor { state: Some(visitor) };
-                unsafe { self.erased_deserialize_f64(&mut erased).unsafe_map(Out::take) }
+            fn deserialize_f64<V>($($mut)* self, _visitor: V) -> Result<V::Value, Error> where V: serde::de::Visitor<'de> {
+                use serde::de::Error;
+                Err(Error::custom("deserializing f64 is not supported"))
             }
 
             fn deserialize_char<V>($($mut)* self, visitor: V) -> Result<V::Value, Error> where V: serde::de::Visitor<'de> {
@@ -1057,14 +1037,14 @@ impl<'de, 'a> serde::de::Visitor<'de> for &'a mut dyn Visitor<'de> {
     where
         E: serde::de::Error,
     {
-        self.erased_visit_f32(v).map_err(unerase)
+        Err(E::custom("f32 is not supported"))
     }
 
     fn visit_f64<E>(self, v: f64) -> Result<Out, E>
     where
         E: serde::de::Error,
     {
-        self.erased_visit_f64(v).map_err(unerase)
+        Err(E::custom("f64 is not supported"))
     }
 
     fn visit_char<E>(self, v: char) -> Result<Out, E>
@@ -1351,14 +1331,6 @@ macro_rules! deref_erased_deserializer {
                 fn erased_deserialize_u128(&mut self, visitor: &mut dyn Visitor<'de>) -> Result<Out, Error> {
                     (**self).erased_deserialize_u128(visitor)
                 }
-            }
-
-            fn erased_deserialize_f32(&mut self, visitor: &mut dyn Visitor<'de>) -> Result<Out, Error> {
-                (**self).erased_deserialize_f32(visitor)
-            }
-
-            fn erased_deserialize_f64(&mut self, visitor: &mut dyn Visitor<'de>) -> Result<Out, Error> {
-                (**self).erased_deserialize_f64(visitor)
             }
 
             fn erased_deserialize_char(&mut self, visitor: &mut dyn Visitor<'de>) -> Result<Out, Error> {
