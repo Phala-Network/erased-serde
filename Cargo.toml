@@ -1,15 +1,15 @@
 [package]
-name = "erased-serde"
+name = "pink-erased-serde"
 version = "0.3.23"
-authors = ["David Tolnay <dtolnay@gmail.com>"]
+authors = ["David Tolnay <dtolnay@gmail.com>", "Wang Ying <wy721@qq.com>"]
 categories = ["encoding", "rust-patterns", "no-std"]
 description = "Type-erased Serialize and Serializer traits"
-documentation = "https://docs.rs/erased-serde"
+documentation = "https://docs.rs/pink-erased-serde"
 edition = "2018"
 keywords = ["serde", "erasure"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
-repository = "https://github.com/dtolnay/erased-serde"
+repository = "https://github.com/Phala-Network/erased-serde"
 rust-version = "1.31"
 
 [dependencies]

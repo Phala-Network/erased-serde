@@ -107,8 +107,6 @@ pub trait Serializer {
         fn erased_serialize_i128(&mut self, v: i128) -> Result<Ok, Error>;
         fn erased_serialize_u128(&mut self, v: u128) -> Result<Ok, Error>;
     }
-    fn erased_serialize_f32(&mut self, v: f32) -> Result<Ok, Error>;
-    fn erased_serialize_f64(&mut self, v: f64) -> Result<Ok, Error>;
     fn erased_serialize_char(&mut self, v: char) -> Result<Ok, Error>;
     fn erased_serialize_str(&mut self, v: &str) -> Result<Ok, Error>;
     fn erased_serialize_bytes(&mut self, v: &[u8]) -> Result<Ok, Error>;
@@ -362,24 +360,6 @@ where
                     .unsafe_map(Ok::new)
                     .map_err(erase)
             }
-        }
-    }
-
-    fn erased_serialize_f32(&mut self, v: f32) -> Result<Ok, Error> {
-        unsafe {
-            self.take()
-                .serialize_f32(v)
-                .unsafe_map(Ok::new)
-                .map_err(erase)
-        }
-    }
-
-    fn erased_serialize_f64(&mut self, v: f64) -> Result<Ok, Error> {
-        unsafe {
-            self.take()
-                .serialize_f64(v)
-                .unsafe_map(Ok::new)
-                .map_err(erase)
         }
     }
 
@@ -680,12 +660,14 @@ macro_rules! impl_serializer_for_trait_object {
                 }
             }
 
-            fn serialize_f32(self, v: f32) -> Result<Ok, Error> {
-                self.erased_serialize_f32(v)
+            fn serialize_f32(self, _v: f32) -> Result<Ok, Error> {
+                use serde::ser::Error;
+                Err(Error::custom("serializing f32 is not supported"))
             }
 
-            fn serialize_f64(self, v: f64) -> Result<Ok, Error> {
-                self.erased_serialize_f64(v)
+            fn serialize_f64(self, _v: f64) -> Result<Ok, Error> {
+                use serde::ser::Error;
+                Err(Error::custom("serializing f64 is not supported"))
             }
 
             fn serialize_char(self, v: char) -> Result<Ok, Error> {
@@ -1285,14 +1267,6 @@ macro_rules! deref_erased_serializer {
                 fn erased_serialize_u128(&mut self, v: u128) -> Result<Ok, Error> {
                     (**self).erased_serialize_u128(v)
                 }
-            }
-
-            fn erased_serialize_f32(&mut self, v: f32) -> Result<Ok, Error> {
-                (**self).erased_serialize_f32(v)
-            }
-
-            fn erased_serialize_f64(&mut self, v: f64) -> Result<Ok, Error> {
-                (**self).erased_serialize_f64(v)
             }
 
             fn erased_serialize_char(&mut self, v: char) -> Result<Ok, Error> {

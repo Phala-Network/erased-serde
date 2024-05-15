@@ -1,3 +1,7 @@
+pink-erased-serde
+=================
+Floating points operations are removed to run in `ink!`
+
 Erased Serde
 ============
 
